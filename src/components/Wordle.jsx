@@ -7,6 +7,12 @@ const SOLUTION = "canape";
 export default function Wordle() {
   const addSpacesToGuess = () => " ".repeat(SOLUTION.length);
   const emptyGuess = addSpacesToGuess();
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+  const [currentGuessIndex, setCurrentGuessIndex] = useState(0);
+  const incrementLetterIndex = () => {
+    if (currentLetterIndex < SOLUTION.length - 1)
+      setCurrentLetterIndex(currentLetterIndex + 1);
+  };
   const [guesses, setGuesses] = useState([
     emptyGuess,
     emptyGuess,
@@ -17,34 +23,58 @@ export default function Wordle() {
   ]);
   const [solutionFound, setSolutionFound] = useState(false);
   const [notifSuccessColor, setNotifSuccessColor] = useState("text-white");
+  const [notification, setNotification] = useState("");
   const wordleRef = useRef();
-  console.log("GUESSES", guesses);
+
   const addLetterInRow = (letter) => {
-    guesses.reverse().map((row, indexGuess) => {
-      if (row.search(/\s/) !== row.length) {
-        if (!row.includes(" ")) return;
-
-        let newGuesses = [...guesses];
-        console.log("old", newGuesses);
-
-        newGuesses[indexGuess] = row.replace(" ", letter);
-        console.log("newGuesses", newGuesses);
-        // console.log("WEIRD", newArray);
-
-        setGuesses(newGuesses);
+    let currentRow = guesses[currentGuessIndex];
+    if (currentRow.search(/\s/) !== currentRow.length) {
+      if (!currentRow.includes(" ")) {
+        return;
       }
-    });
+
+      let newGuesses = [...guesses];
+
+      newGuesses[currentGuessIndex] = currentRow.replaceAt(
+        currentLetterIndex,
+        letter
+      );
+      incrementLetterIndex();
+      setGuesses(newGuesses);
+    }
   };
 
   const typeLetter = (letter) => {
-    console.log("LETTER TYPED " + letter);
     addLetterInRow(letter);
   };
   const hitEnter = () => {
     // TODO handle enter key
+    let currentRow = guesses[currentGuessIndex];
+    if (
+      currentRow.search(/\s/) !== currentRow.length &&
+      currentRow.search(/\s/) !== -1
+    ) {
+      // We still have blank space
+      setNotification("Le mot n'est pas complet");
+      setNotifSuccessColor("text-red-500");
+      return;
+    }
+    if (currentRow.search(/\s/) === -1) {
+      if (currentRow === SOLUTION) setSolutionFound(true);
+    }
+    setCurrentGuessIndex(currentGuessIndex + 1);
+    setCurrentLetterIndex(0);
   };
   const hitBackSpace = () => {
     // TODO handle backspace key
+    let currentRow = guesses[currentGuessIndex];
+    let newGuesses = [...guesses];
+    newGuesses[currentGuessIndex] = currentRow.replaceAt(
+      currentLetterIndex,
+      " "
+    );
+    setGuesses(newGuesses);
+    if (currentLetterIndex > 0) setCurrentLetterIndex(currentLetterIndex - 1);
   };
   const handleKeyDown = (e) => {
     if (solutionFound) return;
@@ -71,12 +101,14 @@ export default function Wordle() {
       >
         <h1 className="text-3xl text-center">Sutom</h1>
         <div
-          className={`hidden text-center h-screen-10 text-lg ${notifSuccessColor}`}
+          className={`${
+            notification ? "visible" : "hidden"
+          } text-center h-screen-10 text-lg ${notifSuccessColor}`}
         >
-          Notification
+          {notification}
         </div>
         {guesses.map((guess, index) => {
-          return <Row key={index} word={guess} />;
+          return <Row key={index} word={guess} solutionFound={solutionFound} />;
         })}
       </div>
     </div>
