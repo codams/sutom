@@ -5,6 +5,7 @@ import { LETTERS, WORDS } from "../data/lettersAndWords";
 const SOLUTION = "canape";
 
 export default function Wordle() {
+  // We can display misplaced and not used letters
   const addSpacesToGuess = () => " ".repeat(SOLUTION.length);
   const emptyGuess = addSpacesToGuess();
   const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
@@ -24,7 +25,7 @@ export default function Wordle() {
   const [solutionFound, setSolutionFound] = useState(false);
   const [notifSuccessColor, setNotifSuccessColor] = useState("text-white");
   const [notification, setNotification] = useState("");
-  const wordleRef = useRef();
+  const wordleRef = useRef(null);
 
   const addLetterInRow = (letter) => {
     let currentRow = guesses[currentGuessIndex];
@@ -60,7 +61,9 @@ export default function Wordle() {
       return;
     }
     if (currentRow.search(/\s/) === -1) {
-      if (currentRow === SOLUTION) setSolutionFound(true);
+      if (currentRow === SOLUTION) {
+        setSolutionFound(true);
+      }
     }
     setCurrentGuessIndex(currentGuessIndex + 1);
     setCurrentLetterIndex(0);
@@ -87,7 +90,10 @@ export default function Wordle() {
     }
   };
   useEffect(() => {
-    wordleRef.current.focus();
+    setTimeout(() => {
+      wordleRef.current?.blur();
+      wordleRef.current?.focus();
+    }, 100);
   }, []);
 
   return (
@@ -108,7 +114,15 @@ export default function Wordle() {
           {notification}
         </div>
         {guesses.map((guess, index) => {
-          return <Row key={index} word={guess} solutionFound={solutionFound} />;
+          return (
+            <Row
+              guessed={currentGuessIndex > index}
+              key={index}
+              word={guess}
+              solution={SOLUTION}
+              solutionFound={solutionFound}
+            />
+          );
         })}
       </div>
     </div>
